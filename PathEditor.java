@@ -232,11 +232,6 @@ public class PathEditor extends JPanel implements 	Runnable,
 		//Draw lines between successive points
 		for (int i = 0; i < path.getPointCount() - 1; i++)
 			g.drawLine(path.getX(i), path.getY(i), path.getX(i+1), path.getY(i+1));
-		//Draw circles around each point
-		int radius = 45;
-		g.setColor(Color.RED);
-		for (int i = 0; i < path.getPointCount(); i++)
-			g.drawOval(path.getX(i) - radius/2, path.getY(i) - radius/2, radius, radius);
 	}
 	
 	//Unimplemented methods

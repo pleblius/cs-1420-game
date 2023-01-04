@@ -10,6 +10,7 @@ package path;
 
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.awt.Graphics;
 import java.awt.Point;
 
 /**
@@ -18,6 +19,7 @@ import java.awt.Point;
 public class Path {
 	//Fields
 	private ArrayList<Point> points;
+	private double totalLength;
 	
 	/**
 	 * Empty constructor that calls no arguments.
@@ -48,6 +50,8 @@ public class Path {
 			
 			points.add(i, new Point(nextX,nextY));
 		}
+		
+		totalLength = this.getLength(0, this.getPointCount() - 1);
 	}
 	
 	//Accessors
@@ -79,7 +83,7 @@ public class Path {
 	public int getY(int n) {
 		return points.get(n).y;
 	}
-	
+
 	//Setters
 	/**
 	 * Appends a new point object to the end of the points ArrayList with the given x and y values.
@@ -101,6 +105,74 @@ public class Path {
 		for (int i = 0; i < newPath.getPointCount(); i++)
 			points.add(new Point(newPath.getX(i),newPath.getY(i)));
 	}
+	
+	/**
+	 * Takes the percentage along the path and returns a point value associated with that location.
+	 * The percentage should be passed as a number between 0.0 and 1.0.
+	 * If the percentage is less than 0, the start point will be returned.
+	 * If the percentage is greater than 1, the end point will be returned.
+	 * 
+	 * @param percentTraveled Percent distance traveled along the path between successive points. Should be a double between 0.0 and 1.0.
+	 * @return The coordinate point of the location that corresponds to the percentage distance traveled.
+	 */
+	public Point convertToCoordinates(double percentTraveled) {
+		//Check for out of bounds inputs
+		if (percentTraveled < 0) return new Point(this.getX(0), this.getY(0));
+		if (percentTraveled > 1) return new 
+				Point(this.getX(this.getPointCount()-1),this.getY(this.getPointCount()-1));
+		
+		//Get line segment the snail is currently on
+		double distTraveled = percentTraveled*this.totalLength;
+		double segLength = 1; //Placeholder value of 1 prevents division by 0 if an error occurs in the loop
+		
+		//Get the line segment that the object is currently on
+		int i = -1; //Iterator
+		while (distTraveled >= 0) {
+			//Increment at start of loop. When distTraveled becomes negative, iterator will point at start of line segment
+			i++;
+			if (i == this.getPointCount()) return null; //Check if index exceeds bounds
+			
+			//Get the length of the current line segment
+			segLength = getLength(i, i+1);
+			//Subtract current length from the distance traveled. When it becomes negative, exit the loop
+			distTraveled -= segLength;
+		}
+		
+		int curX, curY; //Hold the current x and y values of the object
+		double segPercent = (distTraveled + segLength)/segLength; //Get percent along current line segment
+		
+		curX = (int)((1 - segPercent)*this.getX(i) + segPercent*this.getX(i+1));
+		curY = (int)((1 - segPercent)*this.getY(i) + segPercent*this.getY(i+1));
+		
+		return new Point(curX,curY);
+	}
+	
+	/**
+	 * Gets the length of the path between the points at the given array indeces.
+	 * 
+	 * @param firstIndex The first index, indicating where the calculation should begin.
+	 * @param lastIndex The last index, indicating where the calculation should end.
+	 * @return The total length of the path between the two points.
+	 */
+	public double getLength(int firstIndex, int lastIndex) {
+		double l = 0.0;
+		double x_sq;
+		double y_sq;
+		
+		//Iterate from start to end points, getting length of each section
+		for (int i = firstIndex; i < lastIndex; i++) {
+			x_sq = this.getX(i+1) - this.getX(i);
+			x_sq = x_sq*x_sq;
+			
+			y_sq = this.getY(i+1) - this.getY(i);
+			y_sq = y_sq*y_sq;
+			
+			l += Math.pow(x_sq + y_sq, 0.5);
+		}
+		
+		return l;
+	}
+	
 	/**
 	 * Creates a new string that contains all of the information for the path.
 	 * String begins with the number of points in the array.
@@ -124,5 +196,21 @@ public class Path {
 		}
 		
 		return tempString;
+	}
+	
+	/**
+	 * Draws the path to the JFrame using the graphics object g.
+	 * 
+	 * @param g The Graphics object used to draw the path to the screen.
+	 */
+	public void draw(Graphics g) {
+		int circDiameter = 8;
+		
+		//Draw circular dots at the selected points
+		for (int i = 0; i < this.getPointCount(); i++)
+			g.fillOval(this.getX(i) - circDiameter/2, this.getY(i) - circDiameter/2, circDiameter, circDiameter);
+		//Draw lines between successive points
+		for (int i = 0; i < this.getPointCount() - 1; i++)
+			g.drawLine(this.getX(i), this.getY(i), this.getX(i+1), this.getY(i+1));
 	}
 }
