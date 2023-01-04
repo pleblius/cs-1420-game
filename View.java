@@ -1,3 +1,11 @@
+/**
+ * View class for the Tower Defense game.
+ * Extends JPanel and operates the game's visuals.
+ * Creates a JPanel and menu and then constantly draws visible game objects to the frame.
+ * 
+ * @author Tyler C. Wilcox
+ * @version 19 November 2022
+ */
 package game;
 
 import java.awt.Dimension;
@@ -12,20 +20,24 @@ public class View extends JPanel{
 	private Control control;
 	private State state;
 	
+	private int gameWidth = 600;
+	private int gameHeight = 600;
+	private int uiWidth = 200;
+	
 	/**
 	 * View object constructor. Builds the JFrame and panel to display the game as it runs.
 	 * 
 	 * @param c The control object running the game
 	 * @param s The state object that contains the list of game objects
 	 */
-	public View (Control c, State s) {
-		control = c;
-		state = s;
+	public View (State state, Control control) {
+		this.state = state;
+		this.control = control;
 		
 		JFrame f = new JFrame("Tower Defense");
 		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
-		this.setMinimumSize(new Dimension(600,600));
+		this.setMinimumSize(new Dimension(gameWidth + uiWidth,gameHeight));
 		this.setPreferredSize(getMinimumSize());
 		this.setSize(getPreferredSize());
 		

@@ -1,15 +1,22 @@
+/**
+ * Background object that extends the GameObject class.
+ * Object remains static during game operation.
+ * 
+ * 
+ * @author Tyler C. Wilcox
+ * @version 19 November 2022
+ */
 package game;
 
 import java.awt.Graphics;
 
 public class Background extends GameObject{
-	private Control control;
-	
-	public Background(Control c) {
+
+	public Background(State state, Control control) {
+		super(state, control);
+		
 		isVisible = true;
 		isExpired = false;
-		
-		control = c;
 	}
 	
 	@Override
@@ -17,6 +24,6 @@ public class Background extends GameObject{
 	
 	@Override
 	public void draw(Graphics g) {
-		g.drawImage(control.getImage("path_2.jpg"), 0, 0, null);
+		g.drawImage(control.getImage("background.jpg"), 0, 0, null);
 	}
 }
