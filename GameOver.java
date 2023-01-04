@@ -20,7 +20,7 @@ public class GameOver extends GameObject {
 	 */
 	public GameOver(State state, Control control) {
 		super(state, control);
-		state.setGameOver(); // Set the game state to over
+		state.setGameOver(true); // Set the game state to over
 		
 		isVisible = true;
 		isExpired = false;

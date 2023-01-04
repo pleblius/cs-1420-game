@@ -1,3 +1,9 @@
+/**
+ * Menu class for the Tower Defense game. Creates a menu on the right side of the JPanel that includes the title of the game and the user's stats.
+ * 
+ * @author Tyler C. Wilcox
+ * @version 11/30/2022
+ */
 package game;
 
 import java.awt.Color;
@@ -18,7 +24,11 @@ public class Menu extends GameObject {
 
 	@Override
 	public void update(double elapsedTime) {}
-
+	
+	/**
+	 * Draws the game menu on the right side of the screen.
+	 * Draws the user's health, score, and money fields and the title of the game.
+	 */
 	@Override
 	public void draw(Graphics g) {
 		// Draw background
@@ -43,10 +53,5 @@ public class Menu extends GameObject {
 		// User Money
 		g.setColor(Color.YELLOW);
 		g.drawString("Money: " + state.getMoney(), 620, 240);
-		
-		g.setColor(Color.WHITE);
-		g.setFont(new Font("Arial", Font.BOLD, 10));
-		g.drawString("Time Elapsed: " + state.getTotalTime(), 600, 500);
-		
 	}
 }

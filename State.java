@@ -24,6 +24,7 @@ public class State {
 	
 	// State Fields
 	private boolean isGameOver;
+	private boolean isGameStarted;
 	
 	// Time fields
 	private double elapsedTime;
@@ -39,9 +40,11 @@ public class State {
 		currentFrameGameObjects = new ArrayList<GameObject>();
 		
 		isGameOver = false; // Game is running
+		isGameStarted = false; // Give user time to set up
 		
 		// Set timing values
-		prevComputerTime = System.currentTimeMillis();
+		prevComputerTime = System.currentTimeMillis()/1000.0;
+		resetPrevEnemyTime();
 		totalTime = 0;
 		elapsedTime = 0;
 	}
@@ -51,10 +54,9 @@ public class State {
 	 */
 	public void startFrame() {
 		// Calculate frame timing
-		elapsedTime = System.currentTimeMillis() - prevComputerTime;
-		prevComputerTime = System.currentTimeMillis();
-		
-		elapsedTime = elapsedTime/1000d; // Convert to seconds
+		elapsedTime = System.currentTimeMillis()/1000.0 - prevComputerTime;
+		prevComputerTime = System.currentTimeMillis()/1000.0;
+
 		totalTime += elapsedTime;
 		
 		nextFrameGameObjects = new ArrayList<GameObject>();
@@ -100,9 +102,20 @@ public class State {
 	 */
 	public boolean isGameOver() { return isGameOver; }
 	/**
-	 * Sets the boolean flag for the game status to true, ending the game.
+	 * Checks if the game has started. (10-second delay to give user time to set up.)
+	 * @return true if game has started. false otherwise.
 	 */
-	public void setGameOver() { isGameOver = true; }
+	public boolean isGameStarted() { return isGameStarted; }
+	/**
+	 * Sets the boolean flag for the game over status, allowing the game to be ended or restarted.
+	 * @param b the boolean flag to set the game over status to.
+	 */
+	public void setGameOver(boolean b) { isGameOver = b; }
+	/**
+	 * Sets the boolean flag for the game started status, allowing the game to be begun and reset.
+	 * @param b the boolean flag to set the game started status to.
+	 */
+	public void setGameStarted(boolean b) { isGameStarted = b; }
 	
 	/*
 	 * Timer GET/SET
@@ -129,14 +142,14 @@ public class State {
 	 * @return Time since last enemy (in seconds)
 	 */
 	public double getTimeSinceLastEnemy() {
-		return System.currentTimeMillis()/1000d - prevEnemyTime;
+		return System.currentTimeMillis()/1000.0 - prevEnemyTime;
 	}
 	
 	/**
 	 * When a new enemy is loaded, call this to reset the timer on when the next enemy should be loaded. (Measured in seconds.)
 	 */
 	public void resetPrevEnemyTime() {
-		prevEnemyTime = System.currentTimeMillis()/1000d;
+		prevEnemyTime = System.currentTimeMillis()/1000.0;
 	}
 	
 	/*
