@@ -10,6 +10,8 @@ package game;
 
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.util.Collections;
+import java.util.List;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -47,9 +49,14 @@ public class View extends JPanel{
 	}
 	
 	/**
-	 * Paints the current list of game objects to the game field if they are alive and visible
+	 * Paints the current list of game objects to the game field if they are alive and visible.
+	 * First sorts the array according to draw-level to ensure everything is drawn at the appropriate time.
 	 */
 	public void paint(Graphics g) {
+		// Sort the game object list
+		Collections.sort(state.getFrameObjects());
+		
+		// Draw the visible game objects
         for (GameObject go : state.getFrameObjects())
             if (go.isVisible() && !go.isExpired())
                 go.draw(g);

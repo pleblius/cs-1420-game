@@ -30,10 +30,15 @@ public class Control implements Runnable,
 								MouseListener,
 								MouseMotionListener
 								{
+	// Control fields
 	private State state;
 	private View view;
 	private Path path;
+	private Scanner enemyScanner;
 	private Map<String,BufferedImage> imageCache;
+	
+	// Enemy fields
+	private double waveTime; // Time between enemy spawns
 	
 	// Initial user values
 	private int startingMoney = 10000;
@@ -46,32 +51,50 @@ public class Control implements Runnable,
 	private int mouseX;
 	private int mouseY;
 	
+	// Draw level fields
+	public final int BACKGROUND = 0;
+	public final int GROUND_LEVEL = 1;
+	public final int MAIN = 2;
+	public final int SKY = 3;
+	public final int UI = 4;
+	public final int SUPER_UI = 5;
+	public final int TOP = 6;
+	
+	/**
+	 * Constructor - creates a new GUI thread to run the game application on.
+	 */
 	public Control() {
 		// Start GUI thread
 		SwingUtilities.invokeLater(this);
 	}
 	
+	/**
+	 * Game thread method. Loads all necessary objects and creates the timer that 
+	 */
 	public void run() {
 		// Create control objects
 		state = new State();
 		view = new View(state, this);
 		
-		// Load cache and path
+		// Load image cache, path, and enemy spawn order
 		imageCache = new TreeMap<String,BufferedImage>();
 		loadPath();
+		loadWave();
 		
 		// Initialize user stats
 		state.creditUser(startingMoney);
 		state.healUser(startingHealth);
 		
+		// Initialize wave loading values
+		waveTime = 2; // First wave: load a new enemy every 15 seconds
+		
 		// Implement mouse listeners
 		view.addMouseListener(this);
 		view.addMouseMotionListener(this);
 		
-		// Begins creation of a new frame, adds a background a snail object to the game list, then finishes the frame and draws it
+		// Begins creation of a new frame with the background and menu.
         state.startFrame();
         state.addGameObject(new Background(state, this));
-        state.addGameObject(new Snail(state,this));
         state.addGameObject(new Menu(state, this));
         state.addGameObject(new MenuButton(state,this,"Salt Launcher"));
         state.finishFrame();
@@ -90,8 +113,17 @@ public class Control implements Runnable,
 	public void actionPerformed(ActionEvent e) {
         state.startFrame();
         
-        for (GameObject go : state.getFrameObjects())
-            go.update(0);    
+        // Check if gameflag is over. If not, check if it needs to be. If not, update the game state
+        if (!state.isGameOver()) {
+        	if (state.getHealth() <= 0 && state.getTotalTime() > 30)
+        		state.addGameObject(new GameOver(state,this));
+        	else
+        		// Check if we need to load a new enemy
+        		if (state.getTimeSinceLastEnemy() > waveTime)
+        			loadNextEnemy();
+        		for (GameObject go : state.getFrameObjects())
+        			go.update(state.getElapsedTime());
+        }
         
         state.finishFrame();
         view.repaint();
@@ -100,7 +132,7 @@ public class Control implements Runnable,
 	/**
 	 * Loads the desired game path and stores it in the path field.
 	 */
-	public void loadPath() {
+	private void loadPath() {
 		// Console print line to verify loading instances
 		System.out.println("Loading path");
 		
@@ -110,6 +142,42 @@ public class Control implements Runnable,
 		Scanner pathScanner = new Scanner(pathStream);
 		
 		path = new Path(pathScanner);
+	}
+	
+	/**
+	 * Loads the enemy order from the given text file "enemy_order.txt". Stores the scanner
+	 * in the enemyScanner field for later access.
+	 */
+	private void loadWave() {
+		System.out.println("Loading enemy order");
+		
+		// Load the enemy order into the enemyScanner field from the text file
+		ClassLoader myLoader = this.getClass().getClassLoader();
+		InputStream orderStream = myLoader.getResourceAsStream("resources/enemy_order.txt");
+		enemyScanner = new Scanner(orderStream);
+	}
+	
+	/**
+	 * Loads the next enemy needed for the game state, using the enemy scanner loaded in from the enemy order text file.
+	 * Checks if there is another enemy available in the current "level," and if so loads it into the wave.
+	 * If the "level" is over, a new scanner is loaded to reset the spawn order
+	 * and increases the difficulty by decreasing the time between each spawn.
+	 */
+	private void loadNextEnemy() {
+		// Check if the enemy scanner has another object to load, and if so, add the corresponding game object
+		if (enemyScanner.hasNext()) {
+			if (enemyScanner.next().equals("s"))
+				state.addGameObject(new Snail(state, this));
+			else if (enemyScanner.next().equals("c"))
+				state.addGameObject(new SCargo(state, this));
+			
+			state.resetPrevEnemyTime();
+		}
+		// If the scanner is empty, decrease the wave time and load a new wave into the scanner
+		else {
+			waveTime = waveTime*0.6d; // Speed up wave time by 40%
+			loadWave();
+		}
 	}
 	
 	/**
@@ -176,13 +244,14 @@ public class Control implements Runnable,
 	
 	@Override
 	public void mouseDragged(MouseEvent e) {}
-
+	/**
+	 * Gets the x and y coordinates of the mouse every time that it moves and stores them in the mouseX and mouseY fields.
+	 */
 	@Override
 	public void mouseMoved(MouseEvent e) {
 		mouseX = e.getX();
 		mouseY = e.getY();
 	}
-
 	@Override
 	public void mouseClicked(MouseEvent e) {}
 	@Override

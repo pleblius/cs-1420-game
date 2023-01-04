@@ -13,6 +13,7 @@ public class Menu extends GameObject {
 		title = "GARDEN DEFENSE";
 		isVisible = true;
 		isExpired = false;
+		drawLevel = control.UI; // UI level
 	}
 
 	@Override
@@ -42,6 +43,10 @@ public class Menu extends GameObject {
 		// User Money
 		g.setColor(Color.YELLOW);
 		g.drawString("Money: " + state.getMoney(), 620, 240);
+		
+		g.setColor(Color.WHITE);
+		g.setFont(new Font("Arial", Font.BOLD, 10));
+		g.drawString("Time Elapsed: " + state.getTotalTime(), 600, 500);
 		
 	}
 }
