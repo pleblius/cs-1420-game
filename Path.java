@@ -1,6 +1,7 @@
 /**
  * Path class for creation of new Path objects.
  * Used in conjunction with PathEditor to create paths for future checkpoints.
+ * Contains fields to hold the list of points, the total length of the path, and a list of the length of each segment of the path.
  * 
  * @author Tyler C. Wilcox
  * @version 04 November, 2022
@@ -20,6 +21,7 @@ public class Path {
 	//Fields
 	private ArrayList<Point> points;
 	private double totalLength;
+	private ArrayList<Double> segLengths;
 	
 	/**
 	 * Empty constructor that calls no arguments.
@@ -27,6 +29,7 @@ public class Path {
 	 */
 	public Path() {
 		points = new ArrayList<Point>(0);
+		segLengths = new ArrayList<Double>(0);
 	}
 	
 	/**
@@ -42,6 +45,8 @@ public class Path {
 		
 		//Creates a new points ArrayList with capacity equal to the first integer passed to the scanner.
 		points = new ArrayList<Point>(numPoints);
+		//Create a segLength list of length equal to number of segments
+		segLengths = new ArrayList<Double>(numPoints - 1);
 		
 		//Scans through two integers at a time, storing them as the x and y values of a new point at the end of the points ArrayList.
 		for (int i = 0; i < numPoints; i++) {
@@ -51,7 +56,12 @@ public class Path {
 			points.add(i, new Point(nextX,nextY));
 		}
 		
+		//Calculate the total length and the length of each segment
 		totalLength = this.getLength(0, this.getPointCount() - 1);
+		
+		for (int i = 0; i < this.getPointCount()-1; i++) {
+			segLengths.add(i,this.getLength(i,i+1));
+		}
 	}
 	
 	//Accessors
@@ -83,16 +93,38 @@ public class Path {
 	public int getY(int n) {
 		return points.get(n).y;
 	}
+	
+	/**
+	 * Gets the list of segment lengths
+	 * 
+	 * @return The segment lengths list field
+	 */
+	public ArrayList<Double> getSegLengths() {
+		return segLengths;
+	}
+	
+	/**
+	 * Gets the total length of the path
+	 * 
+	 * @return the total length field
+	 */
+	public double getTotalLength() {
+		return totalLength;
+	}
 
 	//Setters
 	/**
 	 * Appends a new point object to the end of the points ArrayList with the given x and y values.
+	 * Updates the segment lengths array and the total path length with the length of the new segment.
 	 *  
 	 * @param x The x value of the point to be added.
 	 * @param y The y value of the point to be added.
 	 */
 	public void add(int x, int y) {
 		points.add(new Point(x,y));
+		if (this.getPointCount() > 1)
+			segLengths.add(this.getLength(this.getPointCount()-2, this.getPointCount()-1));
+		totalLength = this.getLength(0, this.getPointCount()-1);
 	}
 	/**
 	 * Copies the list of points in the given Path object into this object.
@@ -104,6 +136,9 @@ public class Path {
 		
 		for (int i = 0; i < newPath.getPointCount(); i++)
 			points.add(new Point(newPath.getX(i),newPath.getY(i)));
+		
+		segLengths = newPath.getSegLengths();
+		totalLength = newPath.getTotalLength();
 	}
 	
 	/**
@@ -123,26 +158,23 @@ public class Path {
 		
 		//Get line segment the snail is currently on
 		double distTraveled = percentTraveled*this.totalLength;
-		double segLength = 1; //Placeholder value of 1 prevents division by 0 if an error occurs in the loop
+		double subLength = 0;
 		
 		//Get the line segment that the object is currently on
-		int i = -1; //Iterator
-		while (distTraveled >= 0) {
-			//Increment at start of loop. When distTraveled becomes negative, iterator will point at start of line segment
+		int i = -1;
+		double d = 1;
+		while (d > 0) {
+			//Increment index at start of loop; loop will begin at segment 0
 			i++;
-			if (i == this.getPointCount()) return null; //Check if index exceeds bounds
-			
-			//Get the length of the current line segment
-			segLength = getLength(i, i+1);
-			//Subtract current length from the distance traveled. When it becomes negative, exit the loop
-			distTraveled -= segLength;
+			subLength += segLengths.get(i);
+			d = distTraveled - subLength;
 		}
 		
 		int curX, curY; //Hold the current x and y values of the object
-		double segPercent = (distTraveled + segLength)/segLength; //Get percent along current line segment
+		double segPercent = d/segLengths.get(i); //Get percent backwards from end of segment
 		
-		curX = (int)((1 - segPercent)*this.getX(i) + segPercent*this.getX(i+1));
-		curY = (int)((1 - segPercent)*this.getY(i) + segPercent*this.getY(i+1));
+		curX = (int)((1 + segPercent)*this.getX(i+1) - segPercent*this.getX(i));
+		curY = (int)((1 + segPercent)*this.getY(i+1) - segPercent*this.getY(i));
 		
 		return new Point(curX,curY);
 	}
