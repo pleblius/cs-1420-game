@@ -23,6 +23,9 @@ public class Background extends GameObject{
 	@Override
 	public void update(double elapsedTime) {}
 	
+	/**
+	 * Draws the game background.
+	 */
 	@Override
 	public void draw(Graphics g) {
 		g.drawImage(control.getImage("background.jpg"), 0, 0, null);

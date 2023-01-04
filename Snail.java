@@ -1,7 +1,6 @@
 /**
- * Snail class, a subclass of GameObject that implements the Killable interface.
- * Implements GameObject update() and draw() methods.
- * Implements Killable damage() and kill() methods.
+ * Snail class, a subclass of the abstract Enemy class.
+ * Implements the Enemy.addCorpse() method.
  * Represents a snail enemy that moves along the path to attack the user when it reaches the end.
  * 
  * @author Tyler C. Wilcox
@@ -9,113 +8,35 @@
  */
 package game;
 
-import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.Point;
-import java.awt.image.BufferedImage;
-
-public class Snail extends GameObject implements Killable{
-	private double percentage;	// Distance traversed
-	
-	// Parameter fields
-	private double speed;		// Speed it travels at
-	private int maxHealth;		// Max health
-	private int health;			// Current health
-	private int monetaryValue;	// Monetary worth when killed
-	private int scoreValue;		// Score worth when killed
-	private int attackDamage;	// Damage it inflicts
-	
+public class Snail extends Enemy {
 	public Snail(State state, Control control) {
 		super(state, control);
 		
 		// Snail default field values
-		percentage = 0;
-		speed = .5;
-		maxHealth = 3;
+		speed = 1.0/20.0;
+		maxHealth = control.getSnailHealth();
 		health = maxHealth;
 		monetaryValue = 25;
 		scoreValue = 100;
 		attackDamage = 5;
 		
+		// Load the image sprite and get its parameters
+		image = control.getImage("snail.png");
+		width = image.getWidth();
+		height = image.getHeight();
+		
+		// Set draw fields
 		isVisible = true;
 		isExpired = false;
-		drawLevel = control.MAIN; // Draw at the normal object level
-	}
-	
-	/*
-	 * Killable Methods
-	 */
-	
-	/**
-	 * Deals the given amount of damage to the snail object.
-	 * @param damage The amount of damage dealt to the snail.
-	 */
-	@Override
-	public void damage(int damage) {
-		health -= damage;
-	}
-	/**
-	 * Awards the user a kill for this snail object.
-	 * Gives the user an increase in money and score and removes the object from the game list.
-	 */
-	@Override
-	public void kill() {
-		isVisible = false;
-		isExpired = true;
-		
-		state.creditUser(monetaryValue);
-		state.increaseScore(scoreValue);
-	}
-	
-	/*
-	 * Game Object Methods
-	 */
-	
-	
-	/**
-	 * The update override function for the snail class.
-	 * Checks if the snail is dead--killing it if so--and otherwise has the snail travel further along the path based on its speed.
-	 */
-	@Override
-	public void update(double elapsedTime) {
-		// Check if snail is dead
-		if (health <= 0) {
-			// If so, kill the snail and end the update
-			this.kill();
-			return;
-		}
-		
-		// Update snail travel distance
-		percentage += speed*elapsedTime;
-		
-		// Check if snail has reached the end of the path
-		if (percentage >= 1.0) {
-			// If snail reaches end of path, have it damage the user
-			state.damageUser(attackDamage);
-			isExpired = true;
-			isVisible = false;
-		}
+		drawLevel = control.MAIN;
 	}
 	
 	/**
-	 * Draws the snail at the given location, adjusting for the height and the width of the image to keep the sprite center-justified.
-	 * Also draws a healthbar above the snail that adjusts to the snail's current health value.
+	 * Creates a snail corpse to replace the living snail.
+	 * Uses the snail's x and y coordinates to generate a new corpse sprite at the given location.
 	 */
 	@Override
-	public void draw(Graphics g) {
-		// Get the image coordinates
-		Point loc = control.getPath().convertToCoordinates(percentage);
-		
-		// Load the image
-		BufferedImage image = control.getImage("snail.png");
-		
-		// Draws the image at the given point about its center
-		g.drawImage(image, loc.x - image.getWidth()/2, loc.y - image.getHeight()/2, null);
-		
-		// Draw the snail's healthbar
-		g.setColor(Color.BLACK);
-		g.fillRect(loc.x - image.getWidth()/2, loc.y - image.getHeight()/2 - 8, image.getWidth(), 8);
-		g.setColor(Color.RED);
-		g.fillRect(loc.x - image.getWidth()/2 + 1, loc.y - image.getHeight()/2 - 7, ((image.getWidth()-2)*health)/maxHealth, 6);
+	public void addCorpse() {
+		state.addGameObject(new SnailCorpse(state, control, loc.x, loc.y));
 	}
 }

@@ -39,13 +39,12 @@ public class Control implements Runnable,
 	
 	// Enemy fields
 	private double waveTime; // Time between enemy spawns
+	private int snailHealth = 2;
+	private int vanHealth = 4;
 	
 	// Initial user values
-	private int startingMoney = 10000;
+	private int startingMoney = 1000;
 	private int startingHealth = 100;
-	
-	// Game object parameters
-	private int towerCost = 100;
 	
 	// Mouse fields
 	private int mouseX;
@@ -53,12 +52,17 @@ public class Control implements Runnable,
 	
 	// Draw level fields
 	public final int BACKGROUND = 0;
-	public final int GROUND_LEVEL = 1;
+	public final int GROUND = 1;
 	public final int MAIN = 2;
-	public final int SKY = 3;
-	public final int UI = 4;
-	public final int SUPER_UI = 5;
-	public final int TOP = 6;
+	public final int VEHICLE = 3;
+	public final int SKY = 4;
+	public final int UI = 5;
+	public final int SUPER_UI = 6;
+	public final int TOP = 7;
+	
+	// Tower fields
+	private int dumbTowerCost = 100;
+	private int smartTowerCost = 500;
 	
 	/**
 	 * Constructor - creates a new GUI thread to run the game application on.
@@ -86,7 +90,7 @@ public class Control implements Runnable,
 		state.healUser(startingHealth);
 		
 		// Initialize wave loading values
-		waveTime = 2; // First wave: load a new enemy every 15 seconds
+		waveTime = 4; // First wave: load a new enemy every 8 seconds
 		
 		// Implement mouse listeners
 		view.addMouseListener(this);
@@ -96,7 +100,8 @@ public class Control implements Runnable,
         state.startFrame();
         state.addGameObject(new Background(state, this));
         state.addGameObject(new Menu(state, this));
-        state.addGameObject(new MenuButton(state,this,"Salt Launcher"));
+        state.addGameObject(new MenuButton(state, this, 700, 350, "Basic Launcher"));
+        state.addGameObject(new MenuButton(state, this, 700, 450, "Smart Launcher"));
         state.finishFrame();
         view.repaint();
         
@@ -115,16 +120,24 @@ public class Control implements Runnable,
         
         // Check if gameflag is over. If not, check if it needs to be. If not, update the game state
         if (!state.isGameOver()) {
-        	if (state.getHealth() <= 0 && state.getTotalTime() > 30)
+        	// Check if user is dead and end the game if so
+        	if (state.getHealth() <= 0) {
         		state.addGameObject(new GameOver(state,this));
-        	else
+        	}
+        	// Check if game has begun
+        	if (state.isGameStarted()) {
         		// Check if we need to load a new enemy
         		if (state.getTimeSinceLastEnemy() > waveTime)
         			loadNextEnemy();
-        		for (GameObject go : state.getFrameObjects())
+        	}
+        	// If game has not begun, check if it needs to begin
+        	else if (state.getTotalTime() > 10.0)
+        		state.setGameStarted(true);
+        	
+        	// As long as game is not over, continue to update the game state (even if game has not started yet).
+        	for (GameObject go : state.getFrameObjects())
         			go.update(state.getElapsedTime());
         }
-        
         state.finishFrame();
         view.repaint();
 	}
@@ -133,12 +146,9 @@ public class Control implements Runnable,
 	 * Loads the desired game path and stores it in the path field.
 	 */
 	private void loadPath() {
-		// Console print line to verify loading instances
-		System.out.println("Loading path");
-		
 		// Load the path from this object's resource folder
 		ClassLoader myLoader = this.getClass().getClassLoader();
-		InputStream pathStream = myLoader.getResourceAsStream("resources/path_2.path");
+		InputStream pathStream = myLoader.getResourceAsStream("resources/path.path");
 		Scanner pathScanner = new Scanner(pathStream);
 		
 		path = new Path(pathScanner);
@@ -149,8 +159,6 @@ public class Control implements Runnable,
 	 * in the enemyScanner field for later access.
 	 */
 	private void loadWave() {
-		System.out.println("Loading enemy order");
-		
 		// Load the enemy order into the enemyScanner field from the text file
 		ClassLoader myLoader = this.getClass().getClassLoader();
 		InputStream orderStream = myLoader.getResourceAsStream("resources/enemy_order.txt");
@@ -166,17 +174,22 @@ public class Control implements Runnable,
 	private void loadNextEnemy() {
 		// Check if the enemy scanner has another object to load, and if so, add the corresponding game object
 		if (enemyScanner.hasNext()) {
-			if (enemyScanner.next().equals("s"))
+			String nextChar = enemyScanner.next();
+			if (nextChar.equals("s"))
 				state.addGameObject(new Snail(state, this));
-			else if (enemyScanner.next().equals("c"))
+			else if (nextChar.equals("v"))
 				state.addGameObject(new SCargo(state, this));
 			
 			state.resetPrevEnemyTime();
 		}
-		// If the scanner is empty, decrease the wave time and load a new wave into the scanner
+		// If the scanner is empty, decrease the wave time and load a new wave into the scanner. Increment wave number and check for health increase
 		else {
-			waveTime = waveTime*0.6d; // Speed up wave time by 40%
+			waveTime = waveTime*0.75; // Speed up wave timer by 25%
 			loadWave();
+			
+			// Increment wave number
+			snailHealth++;
+			vanHealth++;
 		}
 	}
 	
@@ -195,10 +208,7 @@ public class Control implements Runnable,
     	
     	// If image is not cached, load it and save it to the cache. Includes a println statement to verify loading occurs once.
         try
-        {
-        	// Console print statement to verify loading instances
-        	System.out.println("Loading " + filename);
-        	
+        {        	
         	// Loads the image from the resource folder in this object's directory
         	ClassLoader myLoader = this.getClass().getClassLoader();
         	InputStream imageStream = myLoader.getResourceAsStream("resources/" + filename);
@@ -221,16 +231,16 @@ public class Control implements Runnable,
      * Accessors
      */
     
+    public int getDumbTowerCost() { return dumbTowerCost; }
+    public int getSmartTowerCost() { return smartTowerCost; }
+    public int getSnailHealth() { return snailHealth; }
+    public int getVanHealth() { return vanHealth; }
+    
     /**
      * Returns the game's path field.
      * @return The path field to be returned.
      */
 	public Path getPath() { return path; }
-	/**
-	 * Returns the cost of a game tower.
-	 * @return tower cost.
-	 */
-	public int getTowerCost() { return towerCost; }
 	/**
 	 * Returns the x location of the mouse in the game field.
 	 * @return x coordinate of the mouse.
@@ -258,10 +268,22 @@ public class Control implements Runnable,
 	public void mousePressed(MouseEvent e) {}
 	
 	/**
-	 * Checks if any clickable objects have been clicked.
+	 * Checks if any clickable objects have been clicked. Prioritizes towers if they're moving.
 	 */
 	@Override
 	public void mouseReleased(MouseEvent e) {
+		// Check for any moving towers
+		for (GameObject go : state.getFrameObjects()) {
+			if (go instanceof Tower) {
+				Tower t = (Tower) go;
+				
+				if (t.isMoving())
+					if (((Clickable)t).consumeClick())
+						return;
+			}
+		}
+		
+		// If no moving towers, select the first clickable game object
 		for (GameObject go : state.getFrameObjects())
 			if (go instanceof Clickable)
 				if (((Clickable) go).consumeClick())

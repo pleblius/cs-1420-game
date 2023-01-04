@@ -12,6 +12,8 @@ public class MenuButton extends GameObject implements Clickable {
 	private int insideHeight;
 	
 	// Location fields
+	private int x;
+	private int y;
 	private int xmin;
 	private int xmax;
 	private int ymin;
@@ -22,8 +24,10 @@ public class MenuButton extends GameObject implements Clickable {
 	
 	// Button text field
 	private String buttonText;
+	private int cost;
+	private String type;
 	
-	public MenuButton(State state, Control control, String text) {
+	public MenuButton(State state, Control control, int x, int y, String text) {
 		super(state, control);
 		buttonText = text;
 		
@@ -33,15 +37,27 @@ public class MenuButton extends GameObject implements Clickable {
 		insideWidth = 110;
 		insideHeight = 50;
 		
-		xmin = 700 - outsideWidth/2;
-		xmax = 700 + outsideWidth/2;
-		ymin = 400;
-		ymax = 400 + outsideHeight;
+		this.x = x;
+		this.y = y;
+		xmin = x - outsideWidth/2;
+		xmax = x + outsideWidth/2;
+		ymin = y;
+		ymax = y + outsideHeight;
 		
 		isVisible = true;
 		isExpired = false;
 		queueTower = false;
 		drawLevel = control.SUPER_UI; // Top-level UI
+		
+		// Check what kind of tower the button was for and adjust fields appropriately
+		if (text.equals("Basic Launcher")) {
+			cost = 100;
+			type = new String("basic");
+		}
+		else if (text.equals("Smart Launcher")) {
+			cost = 500;
+			type = new String("smart");
+		}
 	}
 	/**
 	 * Accessor method for the button's text.
@@ -51,8 +67,13 @@ public class MenuButton extends GameObject implements Clickable {
 	
 	@Override
 	public void update(double elapsedTime) {
+		// If a tower is queued to add, add the type that corresponds to the button that summoned it
 		if (queueTower) {
-			state.addGameObject(new SaltLauncher(state, control));
+			if (type.equals("basic"))
+				state.addGameObject(new DumbTower(state, control));
+			else if (type.equals("smart"))
+				state.addGameObject(new SmartTower(state, control));
+			
 			queueTower = false;
 		}
 	}
@@ -61,20 +82,24 @@ public class MenuButton extends GameObject implements Clickable {
 	public void draw(Graphics g) {
 		// Draw button with gray border and black interior
 		g.setColor(Color.GRAY);
-		g.fillRoundRect(700 - outsideWidth/2, 400, outsideWidth, outsideHeight, 20, 20);
+		g.fillRoundRect(x - outsideWidth/2, y, outsideWidth, outsideHeight, 20, 20);
 		
 		g.setColor(Color.WHITE);
-		g.fillRoundRect(700 - insideWidth/2, 400 + (outsideHeight - insideHeight)/2, insideWidth, insideHeight, 16, 16);
+		g.fillRoundRect(x - insideWidth/2, y + (outsideHeight - insideHeight)/2, insideWidth, insideHeight, 16, 16);
 		
 		// Draw the button text
 		g.setColor(Color.BLACK);
-		g.setFont(new Font("Arial", Font.BOLD, 16));
-		g.drawString(buttonText, 700 - insideWidth/2 + 2, 400 + insideHeight/2 + 10);
+		g.setFont(new Font("Arial", Font.BOLD, 14));
+		g.drawString(buttonText, x - insideWidth/2 + 1, y + insideHeight/2);
 		
-		g.setFont(new Font("Arial", Font.BOLD, 12));
-		g.drawString("Cost: " + control.getTowerCost(), 700 - insideWidth/2 + 2, 400 + insideHeight/2 + 25);
+		g.setFont(new Font("Arial", Font.BOLD, 11));
+		g.drawString("Cost: " + cost, x - insideWidth/2 + 25, y + insideHeight/2 + 20);
 	}
-
+	
+	/**
+	 * Implements the consumable interface consumeClick() method.
+	 * If the button is clicked, queues a tower to be added to the game list.
+	 */
 	@Override
 	public boolean consumeClick() {
 		int x = control.getX();
