@@ -13,14 +13,23 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class State {
-	//Game object lists
+	// Game object lists - representing the currently displayed frame and the next frame to be generated.
 	private List<GameObject> currentFrameGameObjects;
 	private List<GameObject> nextFrameGameObjects;
 	
-	//User fields
+	// User fields
 	private int userHealth = 0;
 	private int userMoney = 0;
 	private int userScore = 0;
+	
+	// State Fields
+	private boolean isGameOver;
+	
+	// Time fields
+	private double elapsedTime;
+	private double totalTime;
+	private double prevComputerTime;
+	private double prevEnemyTime;
 	
 	/**
 	 * Constructor.
@@ -28,12 +37,26 @@ public class State {
 	 */
 	public State() {
 		currentFrameGameObjects = new ArrayList<GameObject>();
+		
+		isGameOver = false; // Game is running
+		
+		// Set timing values
+		prevComputerTime = System.currentTimeMillis();
+		totalTime = 0;
+		elapsedTime = 0;
 	}
 	
 	/**
 	 * Begins creating the next frame to draw by copying the current object list into the next object list.
 	 */
 	public void startFrame() {
+		// Calculate frame timing
+		elapsedTime = System.currentTimeMillis() - prevComputerTime;
+		prevComputerTime = System.currentTimeMillis();
+		
+		elapsedTime = elapsedTime/1000d; // Convert to seconds
+		totalTime += elapsedTime;
+		
 		nextFrameGameObjects = new ArrayList<GameObject>();
 		nextFrameGameObjects.addAll(currentFrameGameObjects);
 	}
@@ -64,8 +87,56 @@ public class State {
 	 * 
 	 * @return currentFrameGameObjects, the list of game objects in the current frame.
 	 */
-	public List<GameObject> getFrameObjects() {
-		return currentFrameGameObjects;
+	public List<GameObject> getFrameObjects() { return currentFrameGameObjects; }
+	
+	/*
+	 * Game Over Get/Set
+	 */
+	
+	/**
+	 * Accessor that returns the game's status. Will return true if the game over state has been achieved.
+	 * Will return false if the game is still running.
+	 * @return game over status.
+	 */
+	public boolean isGameOver() { return isGameOver; }
+	/**
+	 * Sets the boolean flag for the game status to true, ending the game.
+	 */
+	public void setGameOver() { isGameOver = true; }
+	
+	/*
+	 * Timer GET/SET
+	 */
+	
+	/**
+	 * Gets the elapsed time since the last frame.
+	 * @return elapsed time since the last frame.
+	 */
+	public double getElapsedTime() { return elapsedTime; }
+	/**
+	 * Gets the total time since the game launched.
+	 * @return total time since the game launched.
+	 */
+	public double getTotalTime() { return totalTime; }
+	/**
+	 * Gets the time that the last enemy was loaded at.
+	 * @return the previous time (in seconds) that the enemy was loaded at.
+	 */
+	public double getPrevEnemyTime() { return prevEnemyTime; }
+	
+	/**
+	 * Returns the time (in seconds) since the last enemy was loaded into the wave.
+	 * @return Time since last enemy (in seconds)
+	 */
+	public double getTimeSinceLastEnemy() {
+		return System.currentTimeMillis()/1000d - prevEnemyTime;
+	}
+	
+	/**
+	 * When a new enemy is loaded, call this to reset the timer on when the next enemy should be loaded. (Measured in seconds.)
+	 */
+	public void resetPrevEnemyTime() {
+		prevEnemyTime = System.currentTimeMillis()/1000d;
 	}
 	
 	/*

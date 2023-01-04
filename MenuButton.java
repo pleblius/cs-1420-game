@@ -41,6 +41,7 @@ public class MenuButton extends GameObject implements Clickable {
 		isVisible = true;
 		isExpired = false;
 		queueTower = false;
+		drawLevel = control.SUPER_UI; // Top-level UI
 	}
 	/**
 	 * Accessor method for the button's text.
@@ -51,7 +52,7 @@ public class MenuButton extends GameObject implements Clickable {
 	@Override
 	public void update(double elapsedTime) {
 		if (queueTower) {
-			state.addGameObject(new SaltLauncher(state, control, true));
+			state.addGameObject(new SaltLauncher(state, control));
 			queueTower = false;
 		}
 	}
@@ -81,7 +82,7 @@ public class MenuButton extends GameObject implements Clickable {
 		
 		// Check if mouse click is within the button's borders
 		if ((x > xmin && x < xmax) && (y > ymin && y < ymax)) {
-			queueTower = !queueTower; // Queue a tower to be added at the next update. (Prevents double queueing.)
+			queueTower = true; // Queue a tower to be added at the next update.
 			return true;
 		}
 		else

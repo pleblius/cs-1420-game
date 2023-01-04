@@ -1,11 +1,11 @@
 /**
- * Snail class, a subclass of GameObject that implements the Killable interface.
+ * SCargo class, a subclass of GameObject that implements the Killable interface.
  * Implements GameObject update() and draw() methods.
  * Implements Killable damage() and kill() methods.
- * Represents a snail enemy that moves along the path to attack the user when it reaches the end.
+ * Represents a van of snail enemies that moves quickly along the path to attack the user when it reaches the end.
  * 
  * @author Tyler C. Wilcox
- * @version 19 November 2022
+ * @version 25 November 2022
  */
 package game;
 
@@ -14,7 +14,7 @@ import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
 
-public class Snail extends GameObject implements Killable{
+public class SCargo extends GameObject implements Killable {
 	private double percentage;	// Distance traversed
 	
 	// Parameter fields
@@ -24,40 +24,29 @@ public class Snail extends GameObject implements Killable{
 	private int monetaryValue;	// Monetary worth when killed
 	private int scoreValue;		// Score worth when killed
 	private int attackDamage;	// Damage it inflicts
-	
-	public Snail(State state, Control control) {
+
+	public SCargo(State state, Control control) {
 		super(state, control);
 		
-		// Snail default field values
+		// SCargo default field values
 		percentage = 0;
-		speed = .5;
-		maxHealth = 3;
+		speed = .15;
+		maxHealth = 8;
 		health = maxHealth;
-		monetaryValue = 25;
-		scoreValue = 100;
-		attackDamage = 5;
+		monetaryValue = 100;
+		scoreValue = 500;
+		attackDamage = 25;
 		
 		isVisible = true;
 		isExpired = false;
 		drawLevel = control.MAIN; // Draw at the normal object level
 	}
 	
-	/*
-	 * Killable Methods
-	 */
-	
-	/**
-	 * Deals the given amount of damage to the snail object.
-	 * @param damage The amount of damage dealt to the snail.
-	 */
+	// Killable overrides
 	@Override
 	public void damage(int damage) {
 		health -= damage;
 	}
-	/**
-	 * Awards the user a kill for this snail object.
-	 * Gives the user an increase in money and score and removes the object from the game list.
-	 */
 	@Override
 	public void kill() {
 		isVisible = false;
@@ -66,31 +55,27 @@ public class Snail extends GameObject implements Killable{
 		state.creditUser(monetaryValue);
 		state.increaseScore(scoreValue);
 	}
-	
-	/*
-	 * Game Object Methods
-	 */
-	
-	
+
 	/**
-	 * The update override function for the snail class.
-	 * Checks if the snail is dead--killing it if so--and otherwise has the snail travel further along the path based on its speed.
+	 * SCargo update override.
+	 * Checks if the object is dead and kills it if so.
+	 * Otherwise, has the object travel a certain distance down the path based on its speed.
 	 */
 	@Override
 	public void update(double elapsedTime) {
-		// Check if snail is dead
+		// Check if SCargo is dead
 		if (health <= 0) {
-			// If so, kill the snail and end the update
+			// If so, kill the van and end the update
 			this.kill();
 			return;
 		}
 		
-		// Update snail travel distance
+		// Update SCargo travel distance
 		percentage += speed*elapsedTime;
 		
-		// Check if snail has reached the end of the path
+		// Check if SCargo has reached the end of the path
 		if (percentage >= 1.0) {
-			// If snail reaches end of path, have it damage the user
+			// If SCargo reaches end of path, have it damage the user
 			state.damageUser(attackDamage);
 			isExpired = true;
 			isVisible = false;
@@ -98,8 +83,8 @@ public class Snail extends GameObject implements Killable{
 	}
 	
 	/**
-	 * Draws the snail at the given location, adjusting for the height and the width of the image to keep the sprite center-justified.
-	 * Also draws a healthbar above the snail that adjusts to the snail's current health value.
+	 * Draws the SCargo at the given location, adjusting the location to keep the image center-justified.
+	 * Also draws a rectangular healthbar above the sprite, indicating the object's health.
 	 */
 	@Override
 	public void draw(Graphics g) {
@@ -107,7 +92,7 @@ public class Snail extends GameObject implements Killable{
 		Point loc = control.getPath().convertToCoordinates(percentage);
 		
 		// Load the image
-		BufferedImage image = control.getImage("snail.png");
+		BufferedImage image = control.getImage("s-cargo.png");
 		
 		// Draws the image at the given point about its center
 		g.drawImage(image, loc.x - image.getWidth()/2, loc.y - image.getHeight()/2, null);
@@ -118,4 +103,5 @@ public class Snail extends GameObject implements Killable{
 		g.setColor(Color.RED);
 		g.fillRect(loc.x - image.getWidth()/2 + 1, loc.y - image.getHeight()/2 - 7, ((image.getWidth()-2)*health)/maxHealth, 6);
 	}
+
 }

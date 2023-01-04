@@ -29,18 +29,21 @@ public class SaltLauncher extends GameObject implements Purchasable,
 	// Combat fields
 	private int attackDamage;	// Damage it inflicts
 	private double attackTime;	// How many seconds between attacks
-	private double timeSinceLastAttack;	// How long since the tower last attacked
-	private boolean canAttack;	// If the tower has an attack queued or not
+	private double timeOfLastAttack;	// The computer time that the tower last attacked at
+	private boolean canAttack;	// If the tower has an attack ready or not
 	
-	public SaltLauncher(State state, Control control, boolean moving) {
+	public SaltLauncher(State state, Control control) {
 		super(state, control);
 		
-		isMoving = moving;
+		isMoving = true;
 		
 		// Default salt tower values
 		cost = 100;
 		attackDamage = 1;
 		attackTime = 1f;
+		
+		if (isMoving) drawLevel = control.SUPER_UI; // Draw above the menu while we're dragging it around
+		else drawLevel = control.MAIN; // If not moving, draw with other game objects
 		
 		// Check if the user can actually afford to build the tower
 		if (canAfford()) {
@@ -72,6 +75,11 @@ public class SaltLauncher extends GameObject implements Purchasable,
 	 * Game Object methods
 	 */
 	
+	/**
+	 * Overrides the base update function.
+	 * If the tower is currently awaiting placement, it follows the user's mouse.
+	 * If the tower has been placed, it checks if it has finished loading another salt salvo and is ready to fire.
+	 */
 	@Override
 	public void update(double elapsedTime) {
 		// If in moving state, have it follow the mouse cursor
@@ -79,11 +87,14 @@ public class SaltLauncher extends GameObject implements Purchasable,
 			x = control.getX();
 			y = control.getY();
 		}
-		
-		if (timeSinceLastAttack > attackTime)
+		// Otherwise, check if the tower is ready to attack
+		else if (timeOfLastAttack - System.currentTimeMillis()/1000d > attackTime)
 			canAttack = true;
 	}
-
+	
+	/**
+	 * Draws the tower's sprite at the given location, adjusted so the center of the base is at the user's mouse point.
+	 */
 	@Override
 	public void draw(Graphics g) {
 		BufferedImage image = control.getImage("salt.png");
@@ -108,16 +119,25 @@ public class SaltLauncher extends GameObject implements Purchasable,
 	 * Purchaseable Methods
 	 */
 	
+	/**
+	 * Checks if the user currently has enough money to affor the tower.
+	 */
 	@Override
 	public boolean canAfford() {
 		return state.getMoney() >= this.getCost();
 	}
 
+	/**
+	 * Charges the user for the cost of the tower.
+	 */
 	@Override
 	public void chargeUser() {
 		state.chargeUser(cost);
 	}
 	
+	/**
+	 * Refunds the cost of the tower to the user.
+	 */
 	@Override
 	public void refundUser() {
 		state.creditUser(cost);

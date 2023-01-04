@@ -12,11 +12,12 @@ package game;
 import java.awt.Graphics;
 
 
-abstract public class GameObject {
+abstract public class GameObject implements Comparable<GameObject>{
     protected boolean isVisible; 
     protected boolean isExpired;
     protected Control control;
     protected State state;
+    public int drawLevel;
     
     /** 
      * Abstract superconstructor
@@ -57,4 +58,12 @@ abstract public class GameObject {
      * @param g Graphics object used to draw the object
      */
     abstract public void draw (Graphics g);
+    
+    /**
+     * Compares two objects based on their draw level.
+     */
+    @Override
+    public int compareTo(GameObject go) {
+    	return Integer.valueOf(drawLevel).compareTo(Integer.valueOf(go.drawLevel));
+    }
 }

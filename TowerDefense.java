@@ -7,7 +7,11 @@
 package game;
 
 public class TowerDefense {
-
+	/**
+	 * Application entry point.
+	 * 
+	 * @param args Unused
+	 */
 	public static void main(String[] args) {		
 		new Control();
 	}

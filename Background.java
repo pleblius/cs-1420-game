@@ -17,6 +17,7 @@ public class Background extends GameObject{
 		
 		isVisible = true;
 		isExpired = false;
+		drawLevel = control.BACKGROUND; // Base background, drawn before all other objects
 	}
 	
 	@Override
